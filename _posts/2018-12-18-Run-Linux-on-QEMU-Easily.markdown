@@ -57,6 +57,8 @@ Kernel Moduleをどうしても読み込みたいという方は[こちら](http
 
 実はここまで使えるようになるまでにいろいろありまして、OVMFのソースデバッグをゴリゴリやりーのQEMUのソースを読みーのをしていました。そのあたりの話についてはアドベントカレンダー24日の記事に書きますので楽しみにしていてください。
 
+明日はツバメプロの「Java の Deserialization 経由の RCE について書きます (予定)」です。お楽しみに。
+
 ## 参考にしたもの
 
 https://github.com/tianocore/tianocore.github.io/wiki/How-to-build-OVMF  
