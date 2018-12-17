@@ -29,20 +29,29 @@ mkfifo /tmp/ovmf.out
 ## OVMFのビルドし直し
 
 次にOVMFのビルドです。前の記事に書いたとおりにビルドするとソースデバッグする機能がOFFになっておりデバッグすることができません。なのでソースデバッグ用にビルドし直しましょう。
-//TODO
+```bash
+./OvmfPkg/build.sh -a X64 -D SOURCE_DEBUG_ENABLE
+```
 
 ## GDBのビルド
 
 次はGDBのビルドです。普通のGDBだとudk-debuggerの一部の機能が使えないので以下のコマンドでGDBをビルドしましょう。インストールするかどうかは自身で判断してください。僕はしませんでした。
+```bash
+wget http://ftp.gnu.org/gnu/gdb/gdb-8.2.tar.xz↲                           
+tar xf gdb-8.2.tar.xz↲                                                    
+mkdir build_gdb
+cd build_gdb↲                                                             
+../gdb-8.2/configure --prefix=`pwd`  --with-python=python3 --with-expat --
+target=x86_64-w64-mingw32↲                                                
+make -j24
 ```
-//TODO
-```
+configureのオプションは上に書いてあるものは必ず入れて、これらを打ち消すオプションは絶対に入れないでください。ココがないとうまく動きません。
 
 ## Debug開始
 
 後はDebugを開始するだけです。
 まずはじめに```/path/to/udk-debugger/bin/udk-gdbserver```を起動します。すると/tmp/ovmf{.in,.out}とつながって待機状態になるので、次にOVMFを起動します。
-起動するときに``` -serial //TODO```オプションをつけてつなぎましょう。いつも使う```-s```オプションは要らないです。
+起動するときに``` -serial pipe:/tmp/ovmf```オプションをつけてつなぎましょう。いつも使う```-s```オプションは要らないです。
 最後に自前のgdbでudk-gdbserverに接続します。gdbをオプション無しで起動して以下のコマンドを叩きます。なお、ポート番号はudk-gdbserverを起動したターミナルに表示されたものを使いましょう(大体1234のはずだけど)。
 ```
 target remote :[port num]
