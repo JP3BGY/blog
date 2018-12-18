@@ -3,6 +3,8 @@ layout: post
 title: "OVMFを使った簡単なUEFI Linux環境の構築の仕方"
 description: "この記事は[TSG Advent Calendar 2018](https://adventar.org/calendars/3450)の18日目の記事として書かれました。昨日はsatos氏の[駒場祭CTF作問の裏話](http://satos.hatenablog.jp/entry/2018/12/17/235940)でした。皆さん、どうも、TSGの中で一番新入部員っぽい雰囲気を醸し出してる1年のJP3BGYです。今日は秋学期にTSGで僕が担当を持っているLinux系Source Code Reading分科会に関連したお話をしようと思います。"
 category: QEMU Linux UEFI
+tag: QEMU Linux UEFI
+locale: ja_JP
 ---
 
 この記事は[TSG Advent Calendar 2018](https://adventar.org/calendars/3450)の18日目の記事として書かれました。
