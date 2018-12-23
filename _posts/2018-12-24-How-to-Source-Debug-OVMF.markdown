@@ -1,14 +1,17 @@
 ---
 layout: post
 title: "OVMFをソースでバッグするお話"
-category: OVMF UEFI
+description:""
+category: QEMU Linux UEFI
+tag: QEMU Linux UEFI
+locale: ja_JP
 ---
 
 この記事は[TSG Advent Calendar 2018](https://adventar.org/calendars/3450)の24日目の記事として書かれました。
-昨日はakouryy氏の[言語実装分科会関連のつもりだったけど Hexagony 関連になりそう]()でした。
+昨日はakouryy氏の[言語実装分科会関連のつもりだったけど Hexagony 関連になりそう](http://akouryy.hatenablog.jp/entry/hexagony/converter-1)でした。
 
 皆さん、どうも数日ぶり。プロのTSG新入生のJP3BGYです。
-今日は前回書いた[OVMFを使った簡単なUEFI Linux環境の構築の仕方]()の続きっぽいもの(中身は独立してる)でこの記事を書くに至るまでに手にしてしまった(不本意)OVMF本体のソースでバッグをする方法です。
+今日は前回書いた[OVMFを使った簡単なUEFI Linux環境の構築の仕方](https://jp3bgy.github.io/blog/qemu%20linux%20uefi/2018/12/18/Run-Linux-on-QEMU-Easily.html)の続きっぽいもの(中身は独立してる)でこの記事を書くに至るまでに手にしてしまった(不本意)OVMF本体のソースでバッグをする方法です。
 
 上の記事の知識を得るまで紆余曲折ありまして、最初kakinotane氏が書いた方法でビルドしたKernelをそのままOVMFに投げたら何故か起動しなくて、その原因を探るためにudk-debuggerを用いてOVMFをひたすらソースデバッグしまくりまして、それでも原因がわからずQEMUをソースデバッグして、やっぱりわからずOVMFをデバッグしてようやく原因がKernelオプションにあるんだということに気が付きまして。Ubuntuのカーネルオプション(/bootディレクトリにあるやつ)をコピーしてオプションを削ってはBuild and Runを繰り返してようやく手に入れた情報というわけです。長かった・・・・・・・・・・・・・（白目）。
 
@@ -43,7 +46,7 @@ mkdir build_gdb
 cd build_gdb↲                                                             
 ../gdb-8.2/configure --prefix=`pwd`  --with-python=python3 --with-expat --
 target=x86_64-w64-mingw32↲                                                
-make -j24
+make 
 ```
 configureのオプションは上に書いてあるものは必ず入れて、これらを打ち消すオプションは絶対に入れないでください。ココがないとうまく動きません。
 
@@ -66,6 +69,7 @@ source /path/to/udk-debugger/scripts/udk-gdb-script
 ちなみにOVMFで自作のUEFIアプリケーションをデバッグするときはこの機能は全く必要ないです。
 [このリンク](https://github.com/tianocore/tianocore.github.io/wiki/How-to-debug-OVMF-with-QEMU-using-GDB)を参考にして頑張りましょう。
 この機能は本当にOVMFやEDK IIの開発者のためのものなので多くの人にとってはほぼ無価値です。注意してください（遅い注意書き）。
+明日はアドベントカレンダー最終日、博多市による[SECCONを巡るもう一つの戦いの話]()です。お楽しみに。
 
 ## 参考にしたもの
 
