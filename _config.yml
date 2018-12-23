@@ -18,7 +18,7 @@ email:
 description: >- # this means to ignore newlines until "baseurl:"
     PC廃人の実験レポート
 baseurl: "/blog" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://jp3bgy.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: jp3bgy
 github_username:  JP3BGY
 default_locale: ja_JP
