@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "OVMFをソースでバッグするお話"
-description:""
+description:"皆さん、どうも数日ぶり。プロのTSG新入生のJP3BGYです。今日は前回書いた[OVMFを使った簡単なUEFI Linux環境の構築の仕方](https://jp3bgy.github.io/blog/qemu%20linux%20uefi/2018/12/18/Run-Linux-on-QEMU-Easily.html)の続きっぽいもの(中身は独立してる)でこの記事を書くに至るまでに手にしてしまった(不本意)OVMF本体のソースでバッグをする方法です。"
 category: QEMU Linux UEFI
 tag: QEMU Linux UEFI
 locale: ja_JP
