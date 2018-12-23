@@ -8,7 +8,7 @@ locale: ja_JP
 ---
 
 この記事は[TSG Advent Calendar 2018](https://adventar.org/calendars/3450)の24日目の記事として書かれました。
-昨日はakouryy氏の[言語実装分科会関連のつもりだったけど Hexagony 関連になりそう](http://akouryy.hatenablog.jp/entry/hexagony/converter-1)でした。
+昨日はakouryy氏の[Hexagony コンバータを作成しました (1)](http://akouryy.hatenablog.jp/entry/hexagony/converter-1)でした。
 
 皆さん、どうも数日ぶり。プロのTSG新入生のJP3BGYです。
 今日は前回書いた[OVMFを使った簡単なUEFI Linux環境の構築の仕方](https://jp3bgy.github.io/blog/qemu%20linux%20uefi/2018/12/18/Run-Linux-on-QEMU-Easily.html)の続きっぽいもの(中身は独立してる)でこの記事を書くに至るまでに手にしてしまった(不本意)OVMF本体のソースでバッグをする方法です。
