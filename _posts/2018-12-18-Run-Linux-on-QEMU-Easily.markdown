@@ -1,11 +1,14 @@
 ---
 layout: post
 title: "OVMFを使った簡単なUEFI Linux環境の構築の仕方"
+description: "この記事は[TSG Advent Calendar 2018](https://adventar.org/calendars/3450)の18日目の記事として書かれました。昨日はsatos氏の[駒場祭CTF作問の裏話](http://satos.hatenablog.jp/entry/2018/12/17/235940)でした。皆さん、どうも、TSGの中で一番新入部員っぽい雰囲気を醸し出してる1年のJP3BGYです。今日は秋学期にTSGで僕が担当を持っているLinux系Source Code Reading分科会に関連したお話をしようと思います。"
 category: QEMU Linux UEFI
+tag: QEMU Linux UEFI
+locale: ja_JP
 ---
 
 この記事は[TSG Advent Calendar 2018](https://adventar.org/calendars/3450)の18日目の記事として書かれました。
-昨日はsatos氏の[駒場祭CTF作問の裏話]()でした。
+昨日はsatos氏の[駒場祭CTF作問の裏話](http://satos.hatenablog.jp/entry/2018/12/17/235940)でした。
 
 皆さん、どうも、TSGの中で一番新入部員っぽい雰囲気を醸し出してる1年のJP3BGYです。今日は秋学期にTSGで僕が担当を持っているLinux系Source Code Reading分科会に関連したお話をしようと思います。
 
@@ -42,7 +45,7 @@ cd edk2
 で、あとはLinux側の用意なんですが、当然Ubuntu等ディストリを用いてデバッグするのも悪くありませんが、デバッグというのはできる限り小さい環境でやるべきなのでここではちゃんとLinux Kernelをビルドしましょう。
 といってもこれの大半は[kakinotane氏のアドベントカレンダーの記事](https://kaki-no-tane.hatenablog.com/entry/2018/12/03/135302)にかかれているのでここでは補足もとい追加すべきLinux Kernel parameterについて書きます。
 
-kakinotane氏の記事の設定ではそもそもKernelがUEFIに対応していないとかVGAドライバがなくてGUIが立ち上がらないとかの問題があるのでそのへんをどうにかするべくいろいろいじったのですが、ブラックリストで消していくとうまく行くのに、ホワイトリストで設定をonにしていくととたんに動かなくなる（隠れたパラメタが原因っぽい？）のでここに僕が使ったできる限り項目を減らした[.config]()へのリンクを貼っときます。
+kakinotane氏の記事の設定ではそもそもKernelがUEFIに対応していないとかVGAドライバがなくてGUIが立ち上がらないとかの問題があるのでそのへんをどうにかするべくいろいろいじったのですが、ブラックリストで消していくとうまく行くのに、ホワイトリストで設定をonにしていくととたんに動かなくなる（隠れたパラメタが原因っぽい？）のでここに僕が使ったできる限り項目を減らした[.config](https://raw.githubusercontent.com/JP3BGY/blog/master/data/.config)へのリンクを貼っときます。
 これをダウンロードして.configをうまいこと差し替えてください。
 
 また、当然ですが自分の見たいKernelの機能もyesにするようにしてください。ここで注意してほしいのは、この設定ではKernel Moduleを読み込むことができないということです。
@@ -56,6 +59,8 @@ Kernel Moduleをどうしても読み込みたいという方は[こちら](http
 ## 終わりに
 
 実はここまで使えるようになるまでにいろいろありまして、OVMFのソースデバッグをゴリゴリやりーのQEMUのソースを読みーのをしていました。そのあたりの話についてはアドベントカレンダー24日の記事に書きますので楽しみにしていてください。
+
+明日はツバメプロの「Java の Deserialization 経由の RCE について書きます (予定)」です。お楽しみに。
 
 ## 参考にしたもの
 
