@@ -40,13 +40,12 @@ mkfifo /tmp/ovmf.out
 
 次はGDBのビルドです。普通のGDBだとudk-debuggerの一部の機能が使えないので以下のコマンドでGDBをビルドしましょう。インストールするかどうかは自身で判断してください。僕はしませんでした。
 ```bash
-wget http://ftp.gnu.org/gnu/gdb/gdb-8.2.tar.xz↲                           
-tar xf gdb-8.2.tar.xz↲                                                    
+wget http://ftp.gnu.org/gnu/gdb/gdb-8.2.tar.xz
+tar xf gdb-8.2.tar.xz
 mkdir build_gdb
-cd build_gdb↲                                                             
-../gdb-8.2/configure --prefix=`pwd`  --with-python=python3 --with-expat --
-target=x86_64-w64-mingw32↲                                                
-make 
+cd build_gdb
+../gdb-8.2/configure --prefix=`pwd`  --with-python=python3 --with-expat --target=x86_64-w64-mingw32
+make
 ```
 configureのオプションは上に書いてあるものは必ず入れて、これらを打ち消すオプションは絶対に入れないでください。ココがないとうまく動きません。
 
