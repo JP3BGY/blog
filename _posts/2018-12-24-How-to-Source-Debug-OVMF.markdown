@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "OVMFをソースでバッグするお話"
+title: "OVMFをソースデバッグするお話"
 description: "皆さん、どうも数日ぶり。プロのTSG新入生のJP3BGYです。今日は前回書いたOVMFを使った簡単なUEFI Linux環境の構築の仕方の続きっぽいもの(中身は独立してる)でこの記事を書くに至るまでに手にしてしまった(不本意)OVMF本体のソースでバッグをする方法です。"
 category: QEMU Linux UEFI
 tag: QEMU Linux UEFI
