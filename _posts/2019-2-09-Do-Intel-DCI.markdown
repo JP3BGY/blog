@@ -115,4 +115,5 @@ https://conference.hitb.org/hitbsecconf2017ams/sessions/commsec-intel-dci-secret
 https://eclypsium.com/2018/07/23/evil-maid-firmware-attacks-using-usb-debug/
 https://github.com/eclypsium/Publications
 https://www.slideshare.net/phdays/tapping-into-the-core
+https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/setting-up-a-usb-3-0-debug-cable-connection
 
