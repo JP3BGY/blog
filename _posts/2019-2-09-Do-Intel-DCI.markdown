@@ -2,7 +2,7 @@
 layout: post
 title: "そうだ、Intel DCIをしよう！"
 description: "Intel DCIの接続に成功したのでその方法を書いておきます。"
-category: Intel_DCI JTAG Linux UEFI
+category: Intel_DCI
 tag: Intel_DCI JTAG Linux UEFI
 locale: ja_JP
 ---
