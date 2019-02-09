@@ -91,7 +91,7 @@ PCH Trace Hub Enable Mode -> Host Debugger
 0x3D84F 			One Of Option: Host Debugger, Value (8 bit): 0x2 {09 07 A1 15 00 00 02}
 0x3D856 		End One Of {29 02}
 ```
-今回関わってくる部分は上のような感じですが、例えば `One Of: ~ ` ってのがUEFIの設定項目で、 `VarOffset/VarName` というのが必要なデータの保存場所のオフセットです。 `One of Option:~` ってのがその設定項目の選択肢で同じ行にある `Value (): 0xYY` ってのがその設定を意味する値、Enumみたいなものです。 `Suppress If {0A 82} ~ ` ってのは後に代替 `QuestionID: ~ equals value ~` てのが続きますがこれはつまりQuestionIdで指定されたUEFIの設定項目の値がvalueである場合はこの選択肢は無効となる、と言う感じですね。上の例だとRun Controlの部分はPlatform Debug Consentの設定がEnabledになっていなければ無効になるのがわかります（もう一つ条件がありますがこれの示す先はUEFIの設定項目ではなかったので謎でしたがRU.EFIを見る限りDefaultで0ではなかったのでこっちが原因で無効になることはなさそうです）。
+今回関わってくる部分は上のような感じですが、例えば `One Of: ~ ` ってのがUEFIの設定項目で、 `VarOffset/VarName` というのが必要なデータの保存場所のオフセットです。 `One of Option:~` ってのがその設定項目の選択肢で同じ行にある `Value (): 0xYY` ってのがその設定を意味する値、Enumみたいなものです。 `Suppress If {0A 82} ~ ` ってのは後に大体 `QuestionID: ~ equals value ~` てのが続きますがこれはつまりQuestionIdで指定されたUEFIの設定項目の値がvalueである場合はこの選択肢は無効となる、と言う感じですね。上の例だとRun Controlの部分はPlatform Debug Consentの設定がEnabledになっていなければ無効になるのがわかります（もう一つ条件がありますがこれの示す先はUEFIの設定項目ではなかったので謎でしたがRU.EFIを見る限りDefaultで0ではなかったのでこっちが原因で無効になることはなさそうです）。
 
 で、以上の方法で設定が無効になってしまうSuppress Ifの条件を含めて、必要な設定の保存オフセットが手に入ります。後はRU.EFIを使って書き換えるだけです。RU.EFIはUEFI Shellを起動可能状態にしているFAT32(ほかのファイルシステムはマザーボードによって対応しているかどうかが異なるのでオススメしません、ASRockはexFatは使えませんでした)で初期化されたUSBメモリの任意の場所にRU.EXE,RU.EFI,RUx32.EFIのすべてを同じディレクトリに保存し、UEFI Shellに入って以下の操作をすると起動します。
 ```
