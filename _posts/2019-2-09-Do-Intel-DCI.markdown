@@ -14,7 +14,7 @@ locale: ja_JP
 なお、ここで書かれていることに関して僕は一切の責任を負いませんので悪しからず。
 
 ## ターゲットPCとなるCPUとマザーボード、その他パーツの用意
-まずはIntel DCIが内蔵されているSkylake以降のCPUとCPUとのJTAGPinがチップセットと配線でつながっているマザーボードが必要になります。一応話を聞く限りではASRock社製はわりとあたりで、ASUSはセキュリティ上の理由でつながってなくて、GIGABYTEはワンちゃん行けるかもと言う感じみたい。他に情報があればTwitterかこのblogのGithub issueにてお話し聞かせていただけると嬉しいです。
+まずはIntel DCIが内蔵されているSkylake以降のCPUとCPUのJTAGPinがチップセットと配線でつながっているマザーボードが必要になります。一応話を聞く限りではASRock社製はわりとあたりで、ASUSはセキュリティ上の理由でつながってなくて、GIGABYTEはワンちゃん行けるかもと言う感じみたい。他に情報があればTwitterかこのblogのGithub issueにてお話し聞かせていただけると嬉しいです。
 私はIntel CoffeeLake Celeron & ASRock H310M-AC/ITXで成功しました。
 ノートPCは当たりハズレが激しそうなのでお金のない人は動くことがわかっている環境を自作することを勧めます。
 
@@ -104,7 +104,7 @@ cd path/to/RU[Enter]
 起動後は [Alt] and [-] and [=]の同時押し（注、RU.efiの操作は英字配列です）でUEFI setting Listにはいって、Setupという文字を探してEnter、で、記録したオフセットの部分を記録したとおりの値に変更すれば終了です。念の為ちゃんと変更できているかどうか再起動した後RU.EFIをもう一度動かして確認すると良いです。
 
 ## Host PCからDebug PCに接続
-まず、Guest PCからxHCIというDebug機能がついているUSB 3.Xポートを探します。Linuxでの探し方はわからなかったのでWindows10評価版とUSB Viewを用いた方法を使いました。[MSDNのDoc](https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/setting-up-a-usb-3-0-debug-cable-connection)を参考に探してみてください。H310M-ac/ITXはウラ面のUSB 3.1ポート2つともxHCIが使えました。後は、USBケーブルでHostとGuestをつなげて、[eclypsiumの発表スライド](https://github.com/eclypsium/Publications/tree/master/2018/DEFCON26)を参考に設定をいじってやるだけです。Core iシリーズのCoffeeLakeの場合、Configuration Consoleで`CFL_CNP_OpenDCI_DBC_Only_ReferenceSettings`という項目を選んであげれば動きます(CFLはCoffeeLakeの略らしいですね)。接続ができたら`itp.hlt()`を呼んで、PCが固まれば成功です。お疲れ様でした。
+まず、Guest PCからDebug機能がついているUSB 3.Xポートを探します。Linuxでの探し方はわからなかったのでWindows10評価版とUSB Viewを用いた方法を使いました。[MSDNのDoc](https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/setting-up-a-usb-3-0-debug-cable-connection)を参考に探してみてください。H310M-ac/ITXはウラ面のUSB 3.1ポート2つともDebug機能が使えました。後は、USBケーブルでHostとGuestをつなげて、[eclypsiumの発表スライド](https://github.com/eclypsium/Publications/tree/master/2018/DEFCON26)を参考に設定をいじってやるだけです。Core iシリーズのCoffeeLakeの場合、Configuration Consoleで`CFL_CNP_OpenDCI_DBC_Only_ReferenceSettings`という項目を選んであげれば動きます(CFLはCoffeeLakeの略らしいですね)。接続ができたら`itp.hlt()`を呼んで、PCが固まれば成功です。お疲れ様でした。
 
 ## CPU/OSデバッグをしよう！
 これで、OSやその下のレイヤであるUEFI,更にはCPU内部までデバッグすることが可能になります。QEMUやらのエミュレータではなく実機でデバッグすることができるのがとても魅力的です。マシンも安い構成なら3〜4万ほどで組み立てることができますので、低レイヤーの勉強を進める人はぜひご自宅に一台デバッグ専用機を作ってみてください。それでは、良いデバッグライフを！
