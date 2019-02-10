@@ -20,6 +20,7 @@ locale: ja_JP
 
 ## USB 3.0 Debug Cableの用意
 僕は[Data ProのUSB 3.0 Debug Cable](https://www.datapro.net/products/usb-3-0-super-speed-a-a-debugging-cable.html)を輸入しました。どういうケーブルかというと、USB 2.0互換用の配線とV+配線がつながっていないケーブルです。人によっては自作しているらしいですが、この辺非常にデリケートな部分なのでPC壊したくなければ購入することを勧めます。
+どうしても作る場合はケーブルを切開する方法ではなく、USB端子の金属の接触部分を剥がす方法をやるとある程度楽で、ノイズの影響が少ないと思います。
 
 ## ホスト環境の用意
 ホスト環境はUSB 3.0ポート以外特別なものが必要なわけではないですが、IvyBridge以前のUSB3.0ポートだとどういうわけかうまく動かない場合があるようです。僕はASUS Z77のUSB 3.0を使おうとしてうまく動きませんでした。自作PCであれば最近発売されたUSB3.X PCIe拡張ボードとかを増設すれば問題ないそうなので、もし以下に書く設定をしてUSB Debug Cableでつなげてもデバイス一覧にDCIの文字が一切なければそのようにすると良いです。
@@ -101,7 +102,7 @@ cd path/to/RU[Enter]
 ```
 基本的にEFI ShellはUnix系ターミナルと同じ操作でプログラムの起動等ができます。
 
-起動後は [Alt] and [-] and [=]の同時押し（注、RU.efiの操作は英字配列です）でUEFI setting Listにはいって、Setupという文字を探してEnter、で、記録したオフセットの部分を記録したとおりの値に変更すれば終了です。念の為ちゃんと変更できているかどうか再起動した後RU.EFIをもう一度動かして確認すると良いです。
+起動後は [Alt] and [-] and [=]の同時押し（注、RU.efiの操作は英字配列です）でUEFI configuration Listにはいって、Setupという文字を探してEnter、で、記録したオフセットの部分を記録したとおりの値に変更すれば終了です。念の為ちゃんと変更できているかどうか再起動した後RU.EFIをもう一度動かして確認すると良いです。
 
 ## Host PCからDebug PCに接続
 まず、Guest PCからDebug機能がついているUSB 3.Xポートを探します。Linuxでの探し方はわからなかったのでWindows10評価版とUSB Viewを用いた方法を使いました。[MSDNのDoc](https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/setting-up-a-usb-3-0-debug-cable-connection)を参考に探してみてください。H310M-ac/ITXはウラ面のUSB 3.1ポート2つともDebug機能が使えました。後は、USBケーブルでHostとGuestをつなげて、[eclypsiumの発表スライド](https://github.com/eclypsium/Publications/tree/master/2018/DEFCON26)を参考に設定をいじってやるだけです。Core iシリーズのCoffeeLakeの場合、Configuration Consoleで`CFL_CNP_OpenDCI_DBC_Only_ReferenceSettings`という項目を選んであげれば動きます(CFLはCoffeeLakeの略らしいですね)。接続ができたら`itp.hlt()`を呼んで、PCが固まれば成功です。お疲れ様でした。
@@ -116,4 +117,4 @@ https://eclypsium.com/2018/07/23/evil-maid-firmware-attacks-using-usb-debug/
 https://github.com/eclypsium/Publications
 https://www.slideshare.net/phdays/tapping-into-the-core
 https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/setting-up-a-usb-3-0-debug-cable-connection
-
+https://github.com/ptresearch
