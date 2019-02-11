@@ -29,6 +29,12 @@ locale: ja_JP
 [Intelのホームページ](https://software.intel.com/en-us/system-studio)からダウンロードしてインストールしましょう。学生と非営利なら使いたい放題できるのかな？おそらく。
 
 ## BIOS設定の書き換え
+
+追記
+
+BIOSにてIntel DCIを有効にする前に、Secure Bootの設定を無効化する必要があります。ASRock社製のUEFIはどうも標準で無効化されているようで書くことを失念していました。
+皆さんは気をつけてください。
+
 ここからがちょっと難関。環境によって微妙に変えるべき設定が変わるので注意してください。Skylakeについては参考資料の記述を見てください。ここではCoffeeLakeでのお話をします。CoffeeLake環境では以下の設定を変更すればDCIが使用可能になります。
 ```
 Platform Debug Consent -> Enabled (DCI OOB+[DbC])
@@ -36,7 +42,7 @@ CPU Run Control -> Enabled
 CPU Run Control Lock -> Disabled
 PCH Trace Hub Enable Mode -> Host Debugger
 ```
-ですが、ASRockのUEFI画面からは変更することができません。そこで、[EFI Shell](https://github.com/chipsec/chipsec/wiki/Creating-a-Bootable-USB-drive-with-UEFI-Shell)と[RU.EFI](http://ruexe.blogspot.com/)というツールを用いて無理やり書き換えていきます（ここでマザーボード及びCPUの会社からの保証・サポートは一切なくなるのでその点は注意してください）。まずは[このgist](https://gist.github.com/eiselekd/d235b52a1615c79d3c6b3912731ab9b2)に書いてあるようにBIOS ROMから変更箇所に該当するデータのオフセットを探します。細かい方法はgistの方に書かれているので書いてない情報について少し細くします。
+ですが、ASRockのUEFI画面からは変更することができません。そこで、[EFI Shell](https://github.com/chipsec/chipsec/wiki/Creating-a-Bootable-USB-drive-with-UEFI-Shell)と[RU.EFI](http://ruexe.blogspot.com/)というツールを用いて無理やり書き換えていきます（ここでマザーボード及びCPUの会社からの保証・サポートは一切なくなるのでその点は注意してください）。まずは[このgist](https://gist.github.com/eiselekd/d235b52a1615c79d3c6b3912731ab9b2)に書いてあるようにBIOS ROMから変更箇所に該当するデータのオフセットを探します。細かい方法はgistの方に書かれているので書いてない情報について少し補足します。
 
 まず、UEFIToolでUUIDって書かれてる部分はUEFIToolのGUID Searchで見つかります（このgistに書いてある情報は少し古そう？）。で、見つけた部分をExtractしますがBody onlyでもwholeでもどっちでも大丈夫です。で、Universal-IFR-Extractorを用いてBIOSの情報を探し出すのですが、だいたい[このファイル](https://github.com/JP3BGY/blog/blob/master/data/section.txt)みたいなものが出力されます。長ったらしい上に何書いているかわからんかもしれませんが、落ち着いてみればそうでもありません。
 ```
@@ -112,9 +118,16 @@ cd path/to/RU[Enter]
 
 ## 参考にした資料
 https://gist.github.com/eiselekd/d235b52a1615c79d3c6b3912731ab9b2
+
 https://conference.hitb.org/hitbsecconf2017ams/sessions/commsec-intel-dci-secrets/
+
 https://eclypsium.com/2018/07/23/evil-maid-firmware-attacks-using-usb-debug/
+
 https://github.com/eclypsium/Publications
+
 https://www.slideshare.net/phdays/tapping-into-the-core
+
 https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/setting-up-a-usb-3-0-debug-cable-connection
+
 https://github.com/ptresearch
+
