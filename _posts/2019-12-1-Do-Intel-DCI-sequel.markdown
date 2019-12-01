@@ -79,3 +79,5 @@ http://www.freepatentsonline.com/y2016/0283423.html
 https://github.com/eclypsium/Publications
 
 https://www.intel.com/content/www/us/en/intelligent-systems/intel-firmware-support-package/intel-fsp-overview.html<Paste>
+
+http://www.lab3.kuis.kyoto-u.ac.jp/arith26/slides/session4/4-4.pdf
