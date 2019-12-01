@@ -65,10 +65,17 @@ CTFだけでなく競プロやら自作のソフトウェアやらにも進捗�
 
 ## 参考にした資料まとめ
 あまり記事の参考にしなかったが、便利な資料もまとめて張っておきます。
+
 https://software.intel.com/en-us/videos/introduction-of-system-debug-and-trace-in-intel-system-studio-2018
+
 https://osfc.io/uploads/talk/paper/18/Debugging_Intel_Firmware_using_DCI___USB_3.0.pdf
+
 https://software.intel.com/security-software-guidance/
+
 https://casualhacking.io/blog/2019/6/2/debug-uefi-code-by-single-stepping-your-coffee-lake-s-hardware-cpu
+
 http://www.freepatentsonline.com/y2016/0283423.html
+
 https://github.com/eclypsium/Publications
+
 https://www.intel.com/content/www/us/en/intelligent-systems/intel-firmware-support-package/intel-fsp-overview.html<Paste>
