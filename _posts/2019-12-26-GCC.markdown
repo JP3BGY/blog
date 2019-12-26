@@ -1,0 +1,224 @@
+---
+layout: post
+title: "GCCで返答保留になった話"
+description: "この記事は[TSG Advent Calendar 2019](https://adventar.org/calendars/4182)の25日目の記事として書かれました。今日はGlobal Cybersecurity Camp(GCC)の課題を出したら返答保留と返された話をします。"
+category: Linux
+tag: Linux JTAG Intel
+locale: ja_JP
+---
+## 挨拶
+
+この記事は[TSG Advent Calendar 2019](https://adventar.org/calendars/4182)の25日目の記事として書かれました。
+
+皆さんまたまたどうも。最近部長を引き継いでただの平部員になったJP3BGYです。
+
+本日はGlobal Cybersecurity Camp(GCC)に出した課題のwriteupとその追記について書こうと思います。
+先に結果からもうしますと、GCCから返答保留という話になりました（えっ）。
+とりあえず、そのへんの話も含めつつ、課題に書ききれなかった追記も含めて話していきたいと思います。
+
+## 返答保留
+
+まず、返答保留という謎の状況になっているわけなんですが、だいたい理由は想像ついていて、技術力は申し分ないが英語力が不足しているので他の人を押しのけてまで参加して欲しい人員ではないが、かといって見捨てるのも惜しいと判断されたんだろうなと思います。
+枠が4名程度とホームページに書いてあったので、おそらく最低限確実に連れてこれる人数以外に、他国やらなんやらとの調整で空くかもしれない枠が何人かあって、そこに入ったんではなかろうかなと。まあ、流石に今の時期に確定枠を保留にする理由はないし、なにか特別な理由がなければ調整枠ではなく切り捨てになるはずなので、確定枠に入らないが調整枠に入った理由を自分の能力を見て考えたらまあこれだろうという感じです。
+一応東大生ではあるのですが、私は英語はあまりできないほうで苦労している自覚があるので、この理由であれば自分も納得するし、自分が選ぶ側の人間だったらまあそうするだろうという判断だと思います（まあ確定ではないけど）。
+
+## 課題writeup
+
+さて、皆さんは私の謎の状況下ではなく、私の課題提出結果のほうが興味あると思うのでさっさと貼ってしまいましょう。以下にその内容を貼るのですが、課題の前提として簡潔に書けと言われていて、だらだら書いていたら捨てられるんだろうなと判断してかなり短くシンプルに書かれています。ですが、個人的にはこんな短い解説では満足していないので、簡潔にとかかれなければ追加としてなにを書いていたかも含めて下に書こうと思います。追加下部分は追記として、別枠になっています。
+
+### gcc_challenge1 : Fuzzing
+(1)
+普通のAFLの場合75分ほどまわしてもidが0,1のcrashのみで、idが2のcrashは発見されなかったのに対して、laf-intelの拡張があるものは17分ほどですべてのcrashを発見した。内部のプログラムから、簡易的なchecksumを走らせていて、その条件が通ると2のcrashが発見されるので、laf-intelの方が複雑な条件に対するカバレッジが上げやすいのだと考えられる。
+(2)
+```
+import angr
+import claripy  
+
+def main(idx):
+    def getFuncAddress( funcName, plt=None ):
+        found = [
+            addr for addr,func in cfg.kb.functions.items()
+            if funcName == func.name and (plt is None or func.is_plt == plt)
+            ]
+        if len( found ) > 0:
+            print("Found "+funcName+"'s address at "+hex(found[0])+"!")
+            return found[0]
+        else:
+            raise Exception("No address found for function : "+funcName)
+
+
+    def get_byte(s, i):
+        pos = s.size() // 8 - 1 - i
+        return s[pos * 8 + 7 : pos * 8]
+
+    project = angr.Project("a.angr", load_options={'auto_load_libs':False})
+    cfg = project.analyses.CFG(fail_fast=True)
+    addrCrash = getFuncAddress('crash')
+    argv = [project.filename]   #argv[0]
+    file_name = "/tmp/symfile"
+    argv.append(file_name)
+
+    state = project.factory.entry_state(args=argv)
+
+    sim_file_size = claripy.BVS("filesize",64)   #max number of bytes we'll try to solve for
+    state.solver.add(sim_file_size <0xFFFFFF)
+    sim_file = angr.SimFile('symfile',size=sim_file_size)
+    state.fs.insert(file_name,sim_file)
+
+    sm = project.factory.simulation_manager(state)
+
+    def check(state):
+        if (state.ip.args[0] == addrCrash):    
+            num = state.solver.eval(state.regs.rdi,cast_to=int)
+            return True if num==idx else False
+        else:
+            return False
+    sm = sm.explore(find=check, )
+
+    found = sm.found
+    if len(found) > 0:    
+        found = sm.found[0]
+        result = found.fs.get(file_name).concretize()
+    else:   
+        result = "Couldn't find any paths which satisfied our conditions."
+    return result
+
+if __name__ == "__main__":
+    for i in range(3):
+        ans=main(i)
+        print('answer "%s"' % ans)
+        with open("ans"+str(i)+".in","wb")as f:
+            f.write(ans)
+```
+(3)
+シンボリック実行とFuzzerの性能を比較しようと思う。ここでの性能とは、バグ発見の網羅性及び速度であるとする。
+
+網羅性に関してはシンボリック実行は自分が見つけたいすべてのパターンについて存在しないということも含めて決定的に判定することができるのに対してFuzzerは確率的ですべてを網羅している保証がない上に、今見つかっている以上のバグが存在しないということも保証しない。また、Fuzzerは確率の低い条件分岐を通すのが難しい、この点をlaf-intelは例えば大きな数値との等価条件を各桁ごとの比較に分解することである程度克服している。
+
+速度に関しては、今回のような非常に短いプログラムで、数学的難問でなければ比較的高速に実行できる。SATはNP完全であるが、昨今のSAT SolverはSAT Competitionなどで最適化が格段に進んでおり、10^6オーダーまでは個人のPCでも現実的な時間で解ける。だが、ループや条件分岐が複雑に入り組む大きなプログラムや、コラッツ予想や暗号的ハッシュ関数の衝突など、数学的に複雑な事象を含んだものに対しては現実的な時間で解析が終わらないか、もしくはエラーとなりなんの情報も得られない。それに対してFuzzerの場合はそのような問題に対しても動かした分だけの成果は得ることができる。
+
+一方Fuzzingとシンボリック実行両方を使ったコンコリック実行と呼ばれる手法を用いたDrillerは、初めはAFLのFuzzingを使い、時間を書けてもFuzzingでのカバレッジが向上しなくなったと判断したらその条件分岐がFuzzingで通る確率が小さいと判断して、その部分をシンボリック実行を用いて解析するようにしている。この手法ではシンボリック実行による低速化を最低限にしつつ、Fuzzingが苦手な低確率な条件分岐を通り抜けることができるという双方の難点をカバーしている状態なので、暗号的ハッシュ関数のような数学的・プログラム的複雑さの双方を兼ね備えたプログラムでなければある程度解析ができると思われる。
+
+#### 追記
+バグの自動発見のツールの使い方及び評価に関する課題だったわけですが、3点追記をしたいと思います。
+
+
+一点目は、FuzzingとSymbolic Executionの比較でもう一点別の観点から比較をすることです。課題ではあまり長くならないようにそれぞれのバグの発見に対する性能を見ましたが、もう一点、UXの観点から少しだけ考えたいと思います。
+その前にUXの比較がなぜ重要なのかというと、UXが良ければ良いほど当然ではありますが多くの人が使うツールになりやすいからです。
+
+このUXという観点においては、間違いなくFuzzerに軍配が上がります。理由は簡単で、Fuzzerは機能がシンプルで自動化がしやすいからです。実際にGoogleはOSSに対してFuzzerをほぼ自動で走らせるOSS Fuzzerなるものを作ってるぐらいです。Fuzzerは入力を何かしらの方法で生成してプログラムに突っ込み、sanitizerなどで最低限のバグを検知してそれを報告するだけで良いので、個人プロジェクトでも簡単に使うことができます。
+
+それに対して、Symbolic Executionは現状だとそれ単体でバグを検出するには自分でバグというものを言語で記述する必要がある上に、解析が完全に終わるまでその解析結果を手に入れることが難しいという大きな欠点があります。これはおそらくSAT/SMTを使っている都合によるものなのでFuzzerレベルまでUXを改善するのは難しいでしょう。
+
+ですが、解析途中の解析状況を利益がある形で人にもたらすのは難しいですが、プログラムによってバグを記述するというのはもっとUXを改善できると私は考えており、裏でいろいろ画策していたりします。近いうちに公開できたらの思っているんでまたそのときに詳細を書きたいと思います。
+
+
+二点目は、FuzzingやSymbolic Execution以外のバグの自動発見手法です。バグの自動発見についてはFuzzingやSymbolic Execution以外にもあり、いわゆる[形式手法](https://ja.wikipedia.org/wiki/%E5%BD%A2%E5%BC%8F%E6%89%8B%E6%B3%95<Paste>)と呼ばれるものがあります。どういうものかと言うと、型システムだったり定理証明支援系みたいな数学的な手法を用いて特定の仕様を満たしているかを検証するというもののことです。
+
+
+型システムなんかがバグの自動発見なのかと思う人もいるかもしれませんが、いわゆるコンパイルエラーというのはバグの自動発見の一種なのです。
+RustやHaskellなんかはデータ競合が起こらないよう言語レベルでいろいろサポートがありますが、まあよく使われるものの例としてはこれがわかりやすいと思います。
+ぶっちゃけ、FuzzingやらSymbolic Executionに頼る前に一番先に頼るべきものです。型やら言語システムによる検証は形式手法の中ではもちろん、バグの自動発見のなかでも一番費用対効果の高い方法でしょう。せっかくRustという低レイヤーでも問題なく使える言語が出てきたのですから、さっさと乗り換えるのが吉です。
+型や言語システムが強い言語を使い、バグを脆弱性にせず、その上でテストやFuzzingやSymbolic Executionを使ってバグを消すというのが現実的な最善手ではないでしょうか。
+
+型システム以外に全自動でバグを見つけてくれるものとしてはモデル検査と自動証明があります。僕はこの2つについてはあまり詳しくないのですが、前者は主にハードウェア（最近はMoCHiなどソフトウェアでも）で使われている手法で、起こりうる状態をすべて列挙して変な状態にならないかを検査するもので、後者は定理証明支援系で手動でやっていた仕様の証明を自動化するというものです。この2つはソフトウェアに対してはまだ発展途上のようで、今後の研究に期待でしょうか。
+
+
+最後にバグの種類と自動発見可能なものに関してです。
+バグというのは実装時のミスに起因するテクニカルエラーと仕様設計時のミスによるロジックエラーの二種類に分けられることが多いと私は考えています。
+
+前者は例えば皆さんおなじみのBoFやheap領域に関する諸々のバグ、他には競合なんかもそれに当たるでしょう。これらはちゃんとした言語・ちゃんとしたツールを用いれば無力化することは容易ですが、未だにC/C++に囚われているようなレガシーコードに振り回されている人たちは未だにこれとよく格闘しています。
+これらのバグの原因は元をたどれば未定義動作の多い言語を使っていることなので、さっさと未定義動作の少ない関数型言語やらRustやらの安全な処理系に移ってください。Microsoftも最近このことに対して本格的に取り組んでいて、Windowsの一部のプロジェクトでRustが試験的に導入されているようです。この流れが早く世界中に普及したらいいなぁ。
+
+後者は、ちょっとわかりにくいですが、[KRACK Attack](https://www.krackattacks.com/)なんかが良い例ではないかと思います。この例はWPAの仕様に脆弱性があったために暗号通信の中身を垣間見ることができるというもので、仕様に脆弱性があったために、バグなく仕様どおりに実装したあらゆる製品に対して攻撃可能であったようです。この手の仕様に起因するものは非常に気づきにくく、そして見つけても直しにくいもので、最悪プログラムを全部書き換えたり全部設計からやり直したりする必要が出てきます。
+
+で、なんでこんな話をしたかと言うと、基本的に先程から話しているバグの自動発見は前者しか見つけられないということが説明したかったからです。形式手法はだいたい数学的に定義された仕様を元に話をしているし、Fuzzerはsanitizerを使っている限りは未定義動作以上の検知はできないし、Symbolic Executionだって、仕様のバグまで見つけることはできません。これらのツールはほぼすべてロジックエラーに対しては無力なのです。これらのツールは非常に強力なんですが、過信は禁物であるということを頭の片隅に入れておいてください。
+
+
+## gcc_challenge2 : IR
+1.1
+0x0020~0x528の内容を0x4020~0x4528にあるデータと同じものにした後、checksumの更新
+1.2
+NX_SUPERBLOCKのomap_oidが0になっていたのでこの部分のデータが壊れていると判断。
+0x4000から始まる部分にAPFS_VOL_ROLE_RECOVERYという復元用のデータがあるため、この内容に書き換えてchecksumを通す。
+その後試しにmountしたらmountできた。
+
+2.1
+0x12d780から2byteを c9 52
+0x12d798から2byteを 8b 46
+0x12d7b0から2byteを c3 4a
+0x12D000のchecksum
+2.2
+この部分はiir_vol40.pdfのj_file_extent_val_tであり、もともとすべて0になっていたので、正しいブロックに書き換えた。
+2.3
+mountしたときにiir_vol40.pdfのメタデータは見れるが中身が見れなかったのでこのファイルのj_file_extent_val_tが正しい実体を指し示してないと推測し、該当箇所を探したところ、phys_block_numが0になっていたのを見つけた。なのでlogical_addrにかかれているオフセットデータを元にiir_vol40.pdfのそのオフセット部分と一致するchallenge.rawの部分をhex検索してその部分のオフセットを求めて正しい値を入れた。
+
+#### 追記
+僕はForensicsはあまり詳しくないのでここに関しては大した追記はないのですが、(1)に関しては実は他のファイルシステムにも同じようにリカバリー用の領域があるのでこれはすばやく気づけると良いと思います。
+
+それと、僕はこの問題hex editorを使って地道に・・・なんてことはしてなくて、極度のめんどくさがり屋で忘れん棒な私はそのような芸当は不可能なので[Kaitai StructのWeb IDE](https://ide.kaitai.io/)に投げました。嬉しいことに、[apfsについてのksyファイル](https://github.com/cugu/apfs.ksy)を公開している人がいらっしゃったのでありがたく使わせていただきました。
+やはり、UI/UXにこだわってるソフトウェアは最高やで！
+
+### gcc_challenge3 : Reversing
+(1)
+```
+#!/usr/bin/env python
+import angr
+import claripy  
+
+def main():
+    project = angr.Project("vmgcc", load_options={'auto_load_libs':True})
+    addrSuccess = 0xe3b+0x400000
+    argv = [project.filename]   #argv[0]
+    flag_chars = claripy.BVS('flag',8*16)
+
+    state = project.factory.full_init_state(args=argv,add_options=angr.options.unicorn,stdin=flag_chars)
+
+    sm = project.factory.simulation_manager(state)
+
+    sm = sm.explore(find=addrSuccess)
+
+    found = sm.found
+    if len(found) > 0:    
+        found = sm.found[0]
+        result = found.solver.eval(flag_chars,cast_to=bytes)
+    else:   
+        result = "Couldn't find any paths which satisfied our conditions."
+    return result
+
+if __name__ == "__main__":
+    ans=main()
+    print('answer "%s"' % ans)
+```
+(2)
+```
+import struct
+with open("keycheck","rb") as f:
+    prog=f.read()
+    i = 0
+    while i< len(prog):
+        if prog[i] == 0x1a:
+            print("r%d = %x"%(prog[i+1],struct.unpack("<I",prog[i+2:i+6])[0]))
+            i+=5
+        elif prog[i] == 10:
+            print("r%d = r%d & r%d"%(prog[i+1],prog[i+1],prog[i+2]))
+            i+=2
+        elif prog[i] ==  0xb:
+            print("r%d = r%d ^ r%d"%(prog[i+1],prog[i+1],prog[i+2]))
+            i+=2
+        elif prog[i] == 0x1b:
+            print("r%d = r%d"%(prog[i+1],prog[i+2]))
+            i+=2
+        elif prog[i] == 0xff:
+            print("end")
+            break
+        i+=1
+```
+
+#### 追記
+これはまあ、やるだけなのでさっさとやりましょう。(1)はどう解答すればいいかわからなかったので雑にangrに投げました。
+
+ところで、最近radare2が自前で開発していたradecoを辞めてGHIDRAとの連携を強化しているらしいですね。個人的にはradecoの開発が終了してしまったのは悲しいのですが、結構いい感じになってるらしいので使ってみるのはどうでしょうか。
+
+## 終わりに
+とりあえずこれだけ書ければ、保留枠には入れるらしいので参考までに。なお、想像以上に長くなったので今日はオチがありません。
