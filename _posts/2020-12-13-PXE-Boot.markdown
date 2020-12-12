@@ -130,7 +130,7 @@ grub2.cfgの書き換え方法なのですが、[^8]の内容を少し見ると�
 
 [^1]: [https://www.jumpingbean.co.za/blogs/mark/set-up-ipv6-lan-with-linux](https://www.jumpingbean.co.za/blogs/mark/set-up-ipv6-lan-with-linux)
 
-[^2]: [https://www.atmarkit.co.jp/ait/articles/1303/14/news095.html](https://www.atmarkit.co.jp/ait/articles/1303/14/news095.html)
+[^2]: [https://www.atmarkit.co.jp/ait/articles/1207/05/news118.html](https://www.atmarkit.co.jp/ait/articles/1207/05/news118.html)
 
 [^3]: [https://wiki.debian.org/DHCP_Server](https://wiki.debian.org/DHCP_Server)
 
