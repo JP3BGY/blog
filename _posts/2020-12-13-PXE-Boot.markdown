@@ -38,7 +38,7 @@ locale: ja_JP
 
 以下の図のような構成によって、HID(マウスやキーボード等)の切替以外の物理的操作を一切排除しつつ、UEFIプログラムもデバッグ可能な環境を作っていきます。
 
-![PXE Boot]({% include PXEBoot.svg})
+![PXE Boot]({% include PXEBoot.svg %})
 
 この方法を用いることで以下のような利点があります。
 
