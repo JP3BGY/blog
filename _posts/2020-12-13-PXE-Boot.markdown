@@ -1,0 +1,142 @@
+---
+layout: post
+title: "PXE BootとIntel DCIを用いたLinux Debug環境"
+description: ""
+category: Intel_DCI
+tag: Linux Intel_DCI PXE_Boot
+locale: ja_JP
+---
+
+この記事は[TSG Advent Calendar 2020](https://adventar.org/calendars/4995)の13日目の記事として書かれました。
+昨日はhideo54さんの[なんかかく]()でした。
+
+## 挨拶
+どうも、数学科に入ってしまったがために最近数学以外のことをあまりしておらず、年に一回このアドベントカレンダーのためだけになんか成果を出しているところのJP3BGYです。
+最近CTFもろくに参加できておらず、もらさんやsmallkirbyさんにはちょっとばかし苦労をかけてしまっていて、少しばかり歯がゆい気持ちになってます。
+前置きはこのぐらいにして、今回も[いままでの](https://jp3bgy.github.io/blog/intel_dci/2019/02/09/Do-Intel-DCI.html)[続きとして](https://jp3bgy.github.io/blog/linux/2019/12/01/Do-Intel-DCI-sequel.html)OSデバッグ環境の話をします。
+
+## Intel System Debuggerの動向
+本題の話をする前に前回からのIntel System Debuggerの僕が気になった変更点を少しリストアップします。
+
+* LinuxからUSB 3.0 DbCへの接続ができるようになっていた
+    * USB 2.0 DbCは検証できておらず
+    * LinuxからビルドしてLinuxからデバッグできるようになったのでデバッグ情報の扱いが楽になった
+* 今まであったEclipse拡張とは別プログラムのSystem DebuggerがLegacy扱いになって、新たにEclipse拡張としてSystem Debuggerが作られてそちらがデフォルトになった
+    * 恐らくその関係で2020/12現在Legacyにあった機能すべてが新しいほうに実装されているわけではなく、例えばPaging情報の表示などの機能がない
+    * こっちはLegacyの方にあったかどうか覚えていないが、新しい方では論理メモリ空間だけでなく、物理メモリ空間を直に見たり変更したりできる
+    * 新しい方の使用方法は普通のEclipse cdtのDebuggerとSystem Debugger Legacyを足した感じになっている、どちらも使ったことあればとくに何も見なくても一通りの機能は使えるはず
+
+## PXE Bootを用いたUEFI,OSデバッグ環境
+
+こっから本題のPXE Bootの話をしていきます。恐らく多くの人がOSやUEFIの開発をするときに用いるソフト及び環境はQEMU+EDKIIだと思います。その場合のソフトの起動方法は、ビルドが必要ならその場ですぐビルドし、その後QEMUにそのソフトを起動するためのオプションを付けて実行し、gdbで接続するというシンプルな段取りになっているのではないかと思います。
+
+一方、実機で同じことをしようとする場合、特別なセットアップをしてない時は実機からUSBメモリやSSDにプログラムを書き込み、それを接続しなおして起動するため、ソフトウェア上で完結せず、手間がかかります。
+
+そこで、この手間をなくし、QEMUと同じレベルで気楽に実行、デバッグができるよう、ほぼソフトウェアで完結できるデバッグ環境を作っていこうと思います。
+
+### 概要
+
+以下の図のような構成によって、HID(マウスやキーボード等)の切替以外の物理的操作を一切排除しつつ、UEFIプログラムもデバッグ可能な環境を作っていきます。
+
+![PXE Boot](../data/PXEBoot.svg)
+
+この方法を用いることで以下のような利点があります。
+
+- プログラムはTFTPの既定の場所に配置するだけ
+- Debug機の起動はWoLによってHost機のソフトウェアから可能
+- PXE Boot自体 UEFI アプリケーションの起動に対応してるのでOSのみでなくUEFI アプリケーションそのものを起動可能
+- キャプチャを使っているので操作画面を録画することができ、一瞬しか表示されないタイプのエラー出力もじっくり見ることができる
+- HIDに関しては2台用意するとか、USB切り替え機を使うとかで手間を減らすことができる
+
+では以下にこの環境の作り方を書いていきます。
+
+### DHCPv6,DNS及びTFTPの設定
+
+PXE Bootは起動する対象を得るためにDHCPからの情報提供を必要とします。そのため、DHCPの設定を変更し、PXE BootするDebug機に対してどのサーバーのどのファイルを起動するべきなのかを教えなければなりません。
+
+しかし、おうちにあるLAN親機が必ずしもDHCPを詳細に設定できるとは限りません。そのような時、以下のような選択肢があります。
+
+1. LAN親機をちょっといいやつに買い換えるか、DHCP機能を切り、新たに自前でDHCPサーバーを建てることでDHCPを細かく設定できるようにする
+2. DHCP Proxyを使って今あるLANとは別にDHCPを建てる
+3. (LANがIPv6に対応してなかったら)DHCPv6を使ってIPv6環境を自力で構築
+
+私はたまたま家の環境がIPv4にしか対応してないしょぼい回線だったので、IPv6環境を別に構築してそのうえでPXE Boot環境を設定する方法を選びました。
+
+DHCPv6環境の構築及びPXE Bootのための設定は自体はネットに記事が大量にあり、あえて僕が書くことはないと思うので [^1] [^2] [^3] [^4] 当たりを参考にしてください。基本的には普通にDHCPv6のセットアップを行い、subnet6のところに数行PXE Bootのための設定を書くだけで終わります。ただ、DHCPv6のポートを開放するときはポート番号をDHCPv4と間違えないように注意してください。DHCPv6のサーバー用のポートは547です。DHCPv4とは異なります。
+
+また、もしDHCPv4v6共に設定がいじれないLAN親機で管理されてる場合でも、 [^5] [^6] [^7] に書かれているような DHCP Proxyの設定を行うことで対処することができます。なお、DHCP Proxyを使う場合は現状 IPv6に対応したOSSは存在してないように見えます（そもそも仕様として存在可能なのかどうかも僕はわかりませんが）。その点はご注意ください。
+
+DHCPの設定が終わったらPXE Bootのファイルをやり取りするTFTPサーバーを建てます。これは基本的にはtftp-hpaだとかdnsmasqでDHCP Proxyと一緒に設定するだとかで何とかなります。とくに書くことはないので割愛。
+
+### 余談：HTTP Bootについて
+
+上記のようなTFTPやDHCPの設定は面倒なものです。なのでできれば避けたいですね。
+もし運が良ければ避けられるかもしれない方法としてHTTP Bootを使うというものがあります。
+
+どういうものかというと、HTTPサーバーでファイルを配布、DHCPかUEFIへの直の設定によってファイルの指定をすることでネットワークからブートできる機能です。UEFIから直接URLを指定できるので、この方法が使えれば上記のDHCP及びTFTPの設定は一切必要なく、HTTPサーバーをちょっと建てるだけで終わります。
+
+ですが、残念ながら私が運が悪く、私の持っている ASRock H310M-AC/ITXはどうも正しく実装されてないらしくUEFIの設定からHTTP Bootをする方法が使えませんでした。なのでとくに書けることがありません。[^4] にはHTTP Bootの方法も書かれているので幸運な人はこちらを参照するといいと思います。もしHTTP Bootが動く実機がありましたら twitter か このblogの issue 当たりにでも連絡していただけると幸いです。
+
+### UEFI の設定
+
+UEFIの設定に関してはマザーボードごとに異なるので細かい設定方法は各自マニュアル等を参照してほしいのですが、だいたい以下の設定をする必要があります。
+
+- PXE Bootの有効化及び起動順位を1番にする
+    - 普通のPXEではなくUEFI上のPXEを選ばないといけない点には注意、普通のPXEを選ぶと当然UEFIアプリケーションは動きません。場合によってはCSMとかの設定が必要になるかもしれません。
+- Wake on Lanの有効化
+    - マザーボードによっては Wake on PCIeなる設定も有効にしないとWoLが使えないらしいです。
+
+Debug機に設定することは少ないので難しくはないでしょう。
+
+### Grub2の設定
+
+実はこの時点でDHCPに設定したURLに UEFI application を配置するだけでそれを起動することができます。なので UEFI application を目的としてる場合はここで設定は終わりです。お疲れさまでした。
+
+OS、とくにLinuxを起動させたい場合はここからGrub2の配置と設定が必要になります。 ネットの資料を探すとここでブートローダーとしてgrub2ではなくpxelinuxを使っている場合があるのですがpxelinuxを開発しているsyslinuxプロジェクトが2014から開発が止まっており、個人的にあまり使いたくないので今回はgrub2を使いました。
+
+設定の方法は [^8] の"Setting up the files for UEFI booting"の項を参考にgrub2.cfgファイルのみ自分用に書き換えればよいです。shim-signed及びgrub-efi-amd64-signedはSecure Bootに対応するために本家のgrub2やshimに文字通りsignedしたやつです。Intel DCIをする場合、Secure Bootは基本無効化させますが、Secure Bootに対応させた方が後々役に立ったりするのでそのままこれらを使うのが良いでしょう。
+
+grub2.cfgの書き換え方法なのですが、[^8]の内容を少し見るとわかる通りTFTPに関する設定は要りません。Grub2は賢いのでどのような環境で起動されたかを勝手に解釈し、ファイル指定のデフォルトが起動環境と同じになるようになります。
+つまり、今回の場合はルートディレクトリを指定するとそれがTFTPサーバーのルートになります。
+なのでQEMUからLinuxを起動するときと同じように、linuxの横にbzImageのファイル指定及びそのあとにQEMUのappendで追加するようなkernel optionsをいれ、initrdにinitial ram diskのファイル指定をするだけで終わりです。
+
+### Linuxとinitrdの準備
+
+あとはbuildrootを用いてLinuxとinitrdを準備すればok......と行きたかったのですが、どういうわけかbuildrootで生成したinitrdとbzImageのペアは私の環境では動きませんでした。以前試したところによるとUbuntu公式のbzImageとbuildrootが生成したinitrdのペアでは動いたのでbzImageの生成が間違ってるのかなとも思ったのですが、同じオプションでビルドした普通のLinux Kernelを使ったら普通に動いたのでもう訳が分かりません。gccが悪さしてるんかな...?
+
+そんなこんななので、私は[以前かいた方法](https://jp3bgy.github.io/blog/linux/2018/12/18/Run-Linux-on-QEMU-Easily.html#linux-%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89l) を使って自分でLinux Kernelとinitrdを作ってます。initrdだけはbuildrootで生成したほうが楽かもしれませんが、疲れたのでこれ以上試していません。
+
+## まとめ
+
+以上の手順によって椅子から動くことなくQEMUに近い方法で実機でLinuxを起動させ、Debugすることができます。gdbのシステムデバッグ機能の少なさからして、こちらの方法のほうがより効率的にデバッグができるのではないかと思います。
+
+なお、私は環境を用意するだけしておいて、OSの解析を全くせず数学をしています（え）。
+
+オチも付いたところで今日はこの辺で終わりにします。
+明日は昆布さんの [身内の勉強のため英語のクイズを生成した話（予定）]() です。お楽しみに！
+
+## 参考資料
+
+[^1]: [https://www.jumpingbean.co.za/blogs/mark/set-up-ipv6-lan-with-linux](https://www.jumpingbean.co.za/blogs/mark/set-up-ipv6-lan-with-linux)
+[https://www.jumpingbean.co.za/blogs/mark/set-up-ipv6-lan-with-linux](https://www.jumpingbean.co.za/blogs/mark/set-up-ipv6-lan-with-linux)
+
+[^2]: [https://www.atmarkit.co.jp/ait/articles/1303/14/news095.html](https://www.atmarkit.co.jp/ait/articles/1303/14/news095.html)
+[https://www.atmarkit.co.jp/ait/articles/1303/14/news095.html](https://www.atmarkit.co.jp/ait/articles/1303/14/news095.html)
+
+[^3]: [https://wiki.debian.org/DHCP_Server](https://wiki.debian.org/DHCP_Server)
+[https://wiki.debian.org/DHCP_Server](https://wiki.debian.org/DHCP_Server)
+
+[^4]: [https://ja.opensuse.org/SDB:PXE_%E3%83%96%E3%83%BC%E3%83%88%E3%81%AB%E3%82%88%E3%82%8B%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB](https://ja.opensuse.org/SDB:PXE_%E3%83%96%E3%83%BC%E3%83%88%E3%81%AB%E3%82%88%E3%82%8B%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
+[https://ja.opensuse.org/SDB:PXE_%E3%83%96%E3%83%BC%E3%83%88%E3%81%AB%E3%82%88%E3%82%8B%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB](https://ja.opensuse.org/SDB:PXE_%E3%83%96%E3%83%BC%E3%83%88%E3%81%AB%E3%82%88%E3%82%8B%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
+
+[^5]: [https://frsyuki.hatenablog.com/entry/20070926/p1](https://frsyuki.hatenablog.com/entry/20070926/p1)
+[https://frsyuki.hatenablog.com/entry/20070926/p1](https://frsyuki.hatenablog.com/entry/20070926/p1)
+
+[^6]: [https://dayflower.hatenablog.com/entry/20090810/1249875581](https://dayflower.hatenablog.com/entry/20090810/1249875581)
+[https://dayflower.hatenablog.com/entry/20090810/1249875581](https://dayflower.hatenablog.com/entry/20090810/1249875581)
+
+[^7]: [https://manski.net/2016/09/pxe-server-on-existing-network-dhcp-proxy-on-ubuntu/](https://manski.net/2016/09/pxe-server-on-existing-network-dhcp-proxy-on-ubuntu/)
+[https://manski.net/2016/09/pxe-server-on-existing-network-dhcp-proxy-on-ubuntu/](https://manski.net/2016/09/pxe-server-on-existing-network-dhcp-proxy-on-ubuntu/)
+
+[^8]: [https://ubuntu.com/server/docs/install/netboot-amd64](https://ubuntu.com/server/docs/install/netboot-amd64)
+[https://ubuntu.com/server/docs/install/netboot-amd64](https://ubuntu.com/server/docs/install/netboot-amd64)

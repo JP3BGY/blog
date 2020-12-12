@@ -2,8 +2,8 @@
 layout: post
 title: "Intel DCI 続編（資料まとめ）"
 description: "この記事は[TSG Advent Calendar 2019](https://adventar.org/calendars/4182)の1日目の記事として書かれました。今日はTSGの分科会の内容と関連した、Intel DCIの続編について書こうと思います。"
-category: Linux
-tag: Linux JTAG Intel
+category: Intel_DCI
+tag: Linux JTAG Intel Intel_DCI
 locale: ja_JP
 ---
 ## 挨拶
