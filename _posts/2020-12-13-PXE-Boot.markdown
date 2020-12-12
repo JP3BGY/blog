@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "PXE BootとIntel DCIを用いたLinux Debug環境"
-description: ""
+description: "PXE Bootを用いて、QEMUとほぼ変わらないコストで実機デバッグを行うための環境構築について"
 category: Intel_DCI
 tag: Linux Intel_DCI PXE_Boot
 locale: ja_JP
