@@ -13,7 +13,7 @@ locale: ja_JP
 ## 挨拶
 どうも、数学科に入ってしまったがために最近数学以外のことをあまりしておらず、年に一回このアドベントカレンダーのためだけになんか成果を出しているところのJP3BGYです。
 最近CTFもろくに参加できておらず、もらさんやsmallkirbyさんにはちょっとばかし苦労をかけてしまっていて、少しばかり歯がゆい気持ちになってます。
-前置きはこのぐらいにして、今回も[いままでの](https://jp3bgy.github.io/blog/intel_dci/2019/02/09/Do-Intel-DCI.html)[続きとして](https://jp3bgy.github.io/blog/linux/2019/12/01/Do-Intel-DCI-sequel.html)OSデバッグ環境の話をします。
+前置きはこのぐらいにして、今回も[いままでの](https://jp3bgy.github.io/blog/intel_dci/2019/02/09/Do-Intel-DCI.html)[続きとして](https://jp3bgy.github.io/blog/intel_dci/2019/12/01/Do-Intel-DCI-sequel.html)OSデバッグ環境の話をします。
 
 ## Intel System Debuggerの動向
 本題の話をする前に前回からのIntel System Debuggerの僕が気になった変更点を少しリストアップします。
