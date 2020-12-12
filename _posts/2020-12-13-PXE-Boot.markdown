@@ -105,7 +105,7 @@ Debug機に設定することは少ないので難しくはないでしょう。
 
 OS、とくにLinuxを起動させたい場合はここからGrub2の配置と設定が必要になります。 ネットの資料を探すとここでブートローダーとしてgrub2ではなくpxelinuxを使っている場合があるのですがpxelinuxを開発しているsyslinuxプロジェクトが2014から開発が止まっており、個人的にあまり使いたくないので今回はgrub2を使いました。
 
-設定の方法は [^8] の"Setting up the files for UEFI booting"の項を参考にgrub2.cfgファイルのみ自分用に書き換えればよいです。shim-signed及びgrub-efi-amd64-signedはSecure Bootに対応するために本家のgrub2やshimに文字通りsignedしたやつです。Intel DCIをする場合、Secure Bootは基本無効化させますが、Secure Bootに対応させた方が後々役に立ったりするのでそのままこれらを使うのが良いでしょう。
+設定の方法は [^8] の"Setting up the files for UEFI booting"の項を参考にgrub.cfgファイルのみ自分用に書き換えればよいです。shim-signed及びgrub-efi-amd64-signedはSecure Bootに対応するために本家のgrub2やshimに文字通りsignedしたやつです。Intel DCIをする場合、Secure Bootは基本無効化させますが、Secure Bootに対応させた方が後々役に立ったりするのでそのままこれらを使うのが良いでしょう。
 
 grub2.cfgの書き換え方法なのですが、[^8]の内容を少し見るとわかる通りTFTPに関する設定は要りません。Grub2は賢いのでどのような環境で起動されたかを勝手に解釈し、ファイル指定のデフォルトが起動環境と同じになるようになります。
 つまり、今回の場合はルートディレクトリを指定するとそれがTFTPサーバーのルートになります。
