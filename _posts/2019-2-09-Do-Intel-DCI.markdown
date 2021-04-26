@@ -14,7 +14,10 @@ locale: ja_JP
 なお、ここで書かれていることに関して僕は一切の責任を負いませんので悪しからず。
 
 ## ターゲットPCとなるCPUとマザーボード、その他パーツの用意
-まずはIntel DCIが内蔵されているSkylake以降のCPUとCPUのJTAGPinがチップセットと配線でつながっているマザーボードが必要になります。一応話を聞く限りではASRock社製はわりとあたりで、ASUSはセキュリティ上の理由でつながってなくて、GIGABYTEはワンちゃん行けるかもと言う感じみたい。他に情報があればTwitterかこのblogのGithub issueにてお話し聞かせていただけると嬉しいです。
+### 追記
+SkylakeはUSB Debug Cableを用いた方法は使えないそうなので訂正
+
+まずはIntel DCIが内蔵されている ~~Skylake~~ KabyLake以降のCPUとCPUのJTAGPinがチップセットと配線でつながっているマザーボードが必要になります。一応話を聞く限りではASRock社製はわりとあたりで、ASUSはセキュリティ上の理由でつながってなくて、GIGABYTEはワンちゃん行けるかもと言う感じみたい。他に情報があればTwitterかこのblogのGithub issueにてお話し聞かせていただけると嬉しいです。
 私はIntel CoffeeLake Celeron & ASRock H310M-AC/ITXで成功しました。
 ノートPCは当たりハズレが激しそうなのでお金のない人は動くことがわかっている環境を自作することを勧めます。
 
